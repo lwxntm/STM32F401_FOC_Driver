@@ -33,7 +33,7 @@ void onboard_adc_init(void) {
     GPIO_Init(GPIOC, &GPIO_InitStruct);
     //配置adc1的输入通道10为规则组的第一个采样目标，输入通道11为规则组的第2个采样目标. 采样时间为56个adc周期，采样时间越长数据越稳定（也就越慢）
     ADC_RegularChannelConfig(ADC1, ADC_Channel_10, 1, ADC_SampleTime_56Cycles);
-    ADC_RegularChannelConfig(ADC1, ADC_Channel_11, 2, ADC_SampleTime_56Cycles);
+    //ADC_RegularChannelConfig(ADC1, ADC_Channel_11, 2, ADC_SampleTime_56Cycles);
 
     ADC_InitTypeDef ADC_InitStruct = {
             .ADC_Resolution=ADC_Resolution_12b,
@@ -49,10 +49,14 @@ void onboard_adc_init(void) {
     ADC_Cmd(ADC1, ENABLE);
 
     //STM32F4 adc 不需要再软件校准
+
+
 }
 
 
-uint16_t ad_getValue(void) {
+uint16_t ad_getValue(uint8_t ADC_Channel) {
+
+    ADC_RegularChannelConfig(ADC1, ADC_Channel, 1, ADC_SampleTime_56Cycles);
     ADC_SoftwareStartConv(ADC1); //软件触发转换
     while (ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC) == RESET); //等待转换完成
     return ADC_GetConversionValue(ADC1);

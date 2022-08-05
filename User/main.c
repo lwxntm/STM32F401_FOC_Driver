@@ -7,11 +7,32 @@
 /* Private variables ---------------------------------------------------------*/
 RCC_ClocksTypeDef RCC_Clocks;
 uint16_t ad_value;
+int32_t nCycleUsed = 0;
 
 /* Private function prototypes -----------------------------------------------*/
 static void Delay(__IO uint32_t nTime);
 
 /* Private functions ---------------------------------------------------------*/
+
+float convert_res_temp_NCP18XH103F03RB(uint32_t res_value) {
+    if (res_value > 27219)
+        return 0.0f;
+    if (res_value < 27219 && res_value > 22021)
+        return (27219 - res_value) / (27219.0f - 22021.0f) * 5 + 0;
+    if (res_value < 22021 && res_value > 17926)
+        return (22021 - res_value) / (22021.0f - 17926.0f) * 5 + 5;
+    if (res_value < 17926 && res_value > 14674)
+        return (17926 - res_value) / (17926.0f - 14674.0f) * 5 + 10;
+    if (res_value < 14674 && res_value > 12081)
+        return (14674 - res_value) / (14674.0f - 12081.0f) * 5 + 15;
+    if (res_value < 12081 && res_value > 10000)
+        return (12081 - res_value) / (12081.0f - 10000.0f) * 5 + 20;
+    if (res_value < 10000 && res_value > 8315)
+        return (10000 - res_value) / (10000.0f - 8315.0f) * 5 + 25;
+    if (res_value < 8315 && res_value > 6948)
+        return (8315 - res_value) / (8315.0f - 6948.0f) * 5 + 30;
+    return 100.0f;
+}
 
 /**
   * @brief  Main program
@@ -24,7 +45,6 @@ int main(void) {
     RCC_GetClocksFreq(&RCC_Clocks);
     SysTick_CLKSourceConfig(SysTick_CLKSource_HCLK);
     SysTick_Config(RCC_Clocks.HCLK_Frequency / 1000);/* SysTick end of count event each 1ms */
-    SystemCoreClockUpdate();
     init_cycle_counter(true);
     delay_ms(50);/* Insert 50 ms delay */
     RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE); /* Enable the GPIOA peripheral */
@@ -43,13 +63,26 @@ int main(void) {
     /* Infinite loop */
 
     while (1) {
-        ad_value = ad_getValue();
-        dap_uart_debug_printf("ad value is %d, ", ad_value);
-        dap_uart_debug_printf("VBus is %.2f V\n", ad_value*8.675f*3.3f/4096);
+        do {
+            int64_t tStart = get_system_ticks();
+
+            ad_value = ad_getValue(ADC_Channel_10);
+            dap_uart_debug_printf("ad value is %d, ", ad_value);
+            dap_uart_debug_printf("VBus is %.2f V\n", ad_value * 8.675f * 3.3f / 4096);
+
+            ad_value = ad_getValue(ADC_Channel_11);
+            dap_uart_debug_printf("ad value is %d, ", ad_value);
+            uint32_t Rntc = 3.3f * 4700 / (ad_value * 3.3f / 4096) - 4700;
+            dap_uart_debug_printf("Rntc= %d R, temp= %.2f \r\n", Rntc, convert_res_temp_NCP18XH103F03RB(Rntc));
+
+            int32_t tEnd=((int32_t) (get_system_ticks() - tStart)) ;
+            dap_uart_debug_printf("----- cost ticks: %d, time: %d us\n", tEnd,tEnd/120);
+        } while (0);
+
+
         delay_ms(1000);
     }
 }
-
 
 
 #ifdef  USE_FULL_ASSERT
