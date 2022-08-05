@@ -143,6 +143,14 @@ void SysTick_Handler(void)
 /*  available peripheral interrupt handler's name please refer to the startup */
 /*  file (startup_stm32f4xx.s).                                               */
 /******************************************************************************/
+uint8_t data1 = 0;
+void USART1_IRQHandler(void){
+    if (((USART1->SR) & USART_FLAG_RXNE) != RESET){
+        data1 = USART1->DR;
+        USART1->DR=data1 ;
+        // dap_uart_printf("data1:%02X\n", data1);
+    }
+}
 
 /**
   * @brief  This function handles PPP interrupt request.

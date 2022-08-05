@@ -41,7 +41,7 @@
 void _putchar(char character) {
     USART1->DR = character;
     /*当数据从发送数据寄存器转移到发送移位寄存器时，TXE会置高，就可以把下一个数据写入到发送数据寄存器了，虽然此时可能并没有真正发送完成*/
-    while ((USART1->SR & USART_FLAG_TXE) == (uint16_t) RESET);
+    while ((USART1->SR & USART_FLAG_TXE) == (uint16_t) RESET);  //对DR寄存器写入后该位会自动清零，不需要手动清零
 }
 
 

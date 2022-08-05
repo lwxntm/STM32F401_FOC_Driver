@@ -20,7 +20,7 @@ static void Delay(__IO uint32_t nTime);
   * @retval None
   */
 int main(void) {
-    NVIC_SetPriorityGrouping(4);
+    NVIC_SetPriorityGrouping(NVIC_PriorityGroup_4);
     GPIO_InitTypeDef GPIO_InitStructure;
     //此处系统时钟已经初始化
     RCC_GetClocksFreq(&RCC_Clocks);
@@ -30,7 +30,7 @@ int main(void) {
     RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);/* Enable the GPIOACperipheral */
 
     softspi_init();   //  初始化PC10 11 12 PD2为 drv8303spi通信用的引脚
-    USART_Config(); // * 初始化UART1，板载daplink上的cdc串口
+    onboard_uart1_init(); // * 初始化UART1，板载daplink上的cdc串口
     dap_uart_printf("****************************\nSTM32F401RC_FOC_Driver is running! \n");
     dap_uart_printf("SYSCLK_Frequency = %lu \n", RCC_Clocks.SYSCLK_Frequency);
     dap_uart_printf("HCLK_Frequency = %lu \n", RCC_Clocks.HCLK_Frequency);
@@ -47,6 +47,7 @@ int main(void) {
         dap_uart_printf("drv8303工作正常\n");
 
     /* Infinite loop */
+
     while (1) {
 
     }

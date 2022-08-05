@@ -4,4 +4,4 @@
 
 #pragma once
 
-void USART_Config(void);
+void onboard_uart1_init(void);
