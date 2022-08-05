@@ -25,12 +25,15 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx.h"
 #include "printf.h"
-#define dap_uart_printf printf_
+#include "ad.h"
+#include "drv8303_soft_spi.h"
+#include "uart.h"
+#include <perf_counter.h>
+#define dap_uart_debug_printf printf_
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
-void TimingDelay_Decrement(void);
 
 #endif /* __MAIN_H */
 

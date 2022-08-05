@@ -3,7 +3,7 @@
 //
 #include "stdint.h"
 #include "stm32f4xx.h"
-
+#include "main.h"
 /**
  * 初始化PC10 11 12 PD2为 drv8303spi通信用的引脚
  */
@@ -62,6 +62,7 @@ void spi3writeword(uint16_t data) {
             GPIOC->BSRR = (1 << 12) << 16;
         }
         spi3sck(0);
+        delay_us(1); //优化等级为Os以上时必须加入，否则drv8303处理不过来
     }
     GPIOC->BSRR = (1 << 12) << 16;  //MOSI空闲时低电平
     chipselect(1);
@@ -73,6 +74,7 @@ uint16_t spi3readword(void) {
     for (int i = 0; i < 16; ++i) {
         spi3sck(1);
         spi3sck(0);
+        delay_us(1);
         if (GPIOC->IDR & (1 << 11)) //如果c11是高电平
         {
             data |= 0x8000 >> i; //MSB在前，先接收高位字节
@@ -94,6 +96,7 @@ uint16_t drv8303_read_reg(uint8_t reg) {
             GPIOC->BSRR = (1 << 12) << 16;
         }
         spi3sck(0);
+        delay_us(1);
     }
     GPIOC->BSRR = (1 << 12) << 16;  //MOSI空闲时低电平
     chipselect(1);
@@ -122,19 +125,21 @@ uint16_t drv8303IDread(void) {
 
 /**
  * drv8303 寄存器测试
- * @return  0为正常，1为错误
  */
-uint8_t drv8303_reg_test(void) {
+void drv8303_reg_test(void) {
+    volatile uint16_t ret = drv8303IDread();
+    dap_uart_debug_printf("drv8303 device ID = 0x%02X \n", (uint8_t) (ret & 0xff));
+
     uint16_t reg_will_be_write = 0;
     uint16_t command = 0;
     command = 0x0000 |//写入模式
               (0x02 << 11) | //要写入的寄存器
               reg_will_be_write; //写入的值
     spi3writeword(command);
-    uint16_t ret = drv8303_read_reg(0x02);
+    ret = drv8303_read_reg(0x02);
     if ((ret & (0x07FF))  //取读出数据的D10-D0
         == reg_will_be_write)
-        return 0;
+        dap_uart_debug_printf("drv8303 工作正常\n");
     else
-        return 1;
+    dap_uart_debug_printf("drv8303 测试未通过\n");
 }

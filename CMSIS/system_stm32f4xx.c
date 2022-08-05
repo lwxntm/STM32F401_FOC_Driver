@@ -120,7 +120,7 @@
 #endif /* STM32F40_41xxx || STM32F427_437xx || STM32F429_439xx || STM32F401xx || STM32F469_479xx */  
 
 /* USB OTG FS, SDIO and RNG Clock =  PLL_VCO / PLLQ */
-#define PLL_Q      7
+#define PLL_Q      10
 
 
 #if defined (STM32F40_41xxx)
@@ -130,7 +130,7 @@
 #endif /* STM32F40_41xxx */
 
 #if defined(STM32F401xx)
-#define PLL_N      168
+#define PLL_N      240
 /* SYSCLK = PLL_VCO / PLL_P */
 #define PLL_P      4
 #endif /* STM32F401xx */
@@ -162,7 +162,7 @@
 #endif /* STM32F427_437x || STM32F429_439xx || STM32F446xx || STM32F469_479xx */
 
 #if defined(STM32F401xx)
-  uint32_t SystemCoreClock = 84000000;
+  uint32_t SystemCoreClock = 120000000;
 #endif /* STM32F401xx */
 
 #if defined(STM32F410xx) || defined(STM32F411xE) || defined(STM32F412xG) || defined(STM32F413_423xx)

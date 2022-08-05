@@ -15,4 +15,4 @@ typedef struct DRV8303CFG{
 void softspi_init(void);
 
 uint16_t drv8303IDread(void);
-uint8_t drv8303_reg_test(void );
+void drv8303_reg_test(void );

@@ -21,6 +21,7 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
+
 #include "stm32f4xx_it.h"
 #include "main.h"
 
@@ -44,8 +45,7 @@
   * @param  None
   * @retval None
   */
-void NMI_Handler(void)
-{
+void NMI_Handler(void) {
 }
 
 /**
@@ -53,12 +53,10 @@ void NMI_Handler(void)
   * @param  None
   * @retval None
   */
-void HardFault_Handler(void)
-{
-  /* Go to infinite loop when Hard Fault exception occurs */
-  while (1)
-  {
-  }
+void HardFault_Handler(void) {
+    /* Go to infinite loop when Hard Fault exception occurs */
+    while (1) {
+    }
 }
 
 /**
@@ -66,12 +64,10 @@ void HardFault_Handler(void)
   * @param  None
   * @retval None
   */
-void MemManage_Handler(void)
-{
-  /* Go to infinite loop when Memory Manage exception occurs */
-  while (1)
-  {
-  }
+void MemManage_Handler(void) {
+    /* Go to infinite loop when Memory Manage exception occurs */
+    while (1) {
+    }
 }
 
 /**
@@ -79,12 +75,10 @@ void MemManage_Handler(void)
   * @param  None
   * @retval None
   */
-void BusFault_Handler(void)
-{
-  /* Go to infinite loop when Bus Fault exception occurs */
-  while (1)
-  {
-  }
+void BusFault_Handler(void) {
+    /* Go to infinite loop when Bus Fault exception occurs */
+    while (1) {
+    }
 }
 
 /**
@@ -92,12 +86,10 @@ void BusFault_Handler(void)
   * @param  None
   * @retval None
   */
-void UsageFault_Handler(void)
-{
-  /* Go to infinite loop when Usage Fault exception occurs */
-  while (1)
-  {
-  }
+void UsageFault_Handler(void) {
+    /* Go to infinite loop when Usage Fault exception occurs */
+    while (1) {
+    }
 }
 
 /**
@@ -105,8 +97,7 @@ void UsageFault_Handler(void)
   * @param  None
   * @retval None
   */
-void SVC_Handler(void)
-{
+void SVC_Handler(void) {
 }
 
 /**
@@ -114,8 +105,7 @@ void SVC_Handler(void)
   * @param  None
   * @retval None
   */
-void DebugMon_Handler(void)
-{
+void DebugMon_Handler(void) {
 }
 
 /**
@@ -123,8 +113,7 @@ void DebugMon_Handler(void)
   * @param  None
   * @retval None
   */
-void PendSV_Handler(void)
-{
+void PendSV_Handler(void) {
 }
 
 /**
@@ -132,9 +121,11 @@ void PendSV_Handler(void)
   * @param  None
   * @retval None
   */
-void SysTick_Handler(void)
-{
-  TimingDelay_Decrement();
+void SysTick_Handler(void) {
+    user_code_insert_to_systick_handler();
+}
+
+void __ensure_systick_wrapper(void) {
 }
 
 /******************************************************************************/
@@ -144,11 +135,12 @@ void SysTick_Handler(void)
 /*  file (startup_stm32f4xx.s).                                               */
 /******************************************************************************/
 uint8_t data1 = 0;
-void USART1_IRQHandler(void){
-    if (((USART1->SR) & USART_FLAG_RXNE) != RESET){
+
+void USART1_IRQHandler(void) {
+    if (((USART1->SR) & USART_FLAG_RXNE) != RESET) {
         data1 = USART1->DR;
-        USART1->DR=data1 ;
-        // dap_uart_printf("data1:%02X\n", data1);
+        USART1->DR = data1;
+        // dap_uart_debug_printf("data1:%02X\n", data1);
     }
 }
 
