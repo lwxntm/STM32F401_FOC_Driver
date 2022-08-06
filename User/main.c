@@ -2,6 +2,7 @@
 #include <memory.h>
 #include "main.h"
 
+
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
@@ -12,7 +13,6 @@ int32_t tEnd;
 extern uint16_t ad_value[2];
 
 /* Private function prototypes -----------------------------------------------*/
-static void Delay(__IO uint32_t nTime);
 
 /* Private functions ---------------------------------------------------------*/
 
@@ -56,17 +56,17 @@ int main(void) {
     softspi_init();   //  初始化PC10 11 12 PD2为 drv8303spi通信用的引脚
     drv8303_reg_test();
     onboard_adc_init();
+    hall_init();
     /* Infinite loop */
     //ad_getValue();
-
     while (1) {
         do {
             tStart = get_system_ticks();
-            float vbus_value_v = ad_value[0] * 0.0069911251073576f;
-            float temp_board_c = convert_res_temp_NCP18XH103F03RB(
-                    (3.3f * 4700 / (float) (ad_value[1] * 3.3 / 4095) - 4700));
-            just_float_transmit(vbus_value_v, temp_board_c);
-            tEnd = ((int32_t) (get_system_ticks() - tStart));
+//            float vbus_value_v = ad_value[0] * 0.0069911251073576f;
+//            float temp_board_c = convert_res_temp_NCP18XH103F03RB(
+//                    (3.3f * 4700 / (float) (ad_value[1] * 3.3 / 4095) - 4700));
+//            just_float_transmit(vbus_value_v, temp_board_c);
+//            tEnd = ((int32_t) (get_system_ticks() - tStart));
             // dap_uart_debug_printf("总线电压: %.2f V,主板温度: %.2f °C \n ", vbus_value_v, temp_board_c);
             // dap_uart_debug_printf("------------- cost ticks: %d, time: %d us\n", tEnd, tEnd / 120);
         } while (0);
