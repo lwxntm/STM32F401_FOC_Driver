@@ -7,4 +7,4 @@
 #include "main.h"
 
 void onboard_adc_init(void);
-uint16_t ad_getValue(uint8_t ADC_Channel);
+void ad_getValue(void) ;

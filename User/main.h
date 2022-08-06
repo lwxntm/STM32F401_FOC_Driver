@@ -19,8 +19,7 @@
   */
   
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __MAIN_H
-#define __MAIN_H
+#pragma once
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx.h"
@@ -29,11 +28,10 @@
 #include "drv8303_soft_spi.h"
 #include "uart.h"
 #include <perf_counter.h>
+#include "myDMA.h"
 #define dap_uart_debug_printf printf_
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
-
-#endif /* __MAIN_H */
 

@@ -2,6 +2,7 @@
 // Created by xiaotian on 2022/8/5.
 //
 
+#include <string.h>
 #include "uart.h"
 #include "stm32f4xx.h"
 
@@ -65,4 +66,24 @@ void onboard_uart1_init(void) {
     NVIC_Init(&NVIC_InitStruct);
 
     USART_Cmd(USART1, ENABLE);
+}
+
+void onboard_uart_transmit(const uint8_t *pdata, uint32_t length) {
+    for (int i = 0; i < length; ++i) {
+        USART1->DR = *(pdata + i);
+        /*当数据从发送数据寄存器转移到发送移位寄存器时，TXE会置高，就可以把下一个数据写入到发送数据寄存器了，虽然此时可能并没有真正发送完成*/
+        while ((USART1->SR & USART_FLAG_TXE) == (uint16_t) RESET);  //对DR寄存器写入后该位会自动清零，不需要手动清零
+    }
+}
+
+float tempFloat[2];                    //定义的临时变量
+uint8_t tempData[12] = {
+        0, 0, 0, 0, 0, 0, 0, 0, 0x00, 0x00, 0x80, 0x7f
+};                    //定义的传输Buffer
+
+void just_float_transmit(float f1, float f2) {
+    tempFloat[0] = f1;    //转成浮点数
+    tempFloat[1] = f2;
+    memcpy(tempData, (uint8_t *) tempFloat, sizeof(tempFloat));//通过拷贝把数据重新整理
+    onboard_uart_transmit(tempData, 12);
 }

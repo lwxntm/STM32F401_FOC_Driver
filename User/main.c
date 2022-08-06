@@ -1,4 +1,5 @@
 /* Includes ------------------------------------------------------------------*/
+#include <memory.h>
 #include "main.h"
 
 /* Private typedef -----------------------------------------------------------*/
@@ -6,8 +7,9 @@
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 RCC_ClocksTypeDef RCC_Clocks;
-uint16_t ad_value;
-int32_t nCycleUsed = 0;
+int64_t tStart;
+int32_t tEnd;
+extern uint16_t ad_value[2];
 
 /* Private function prototypes -----------------------------------------------*/
 static void Delay(__IO uint32_t nTime);
@@ -34,11 +36,7 @@ float convert_res_temp_NCP18XH103F03RB(uint32_t res_value) {
     return 100.0f;
 }
 
-/**
-  * @brief  Main program
-  * @param  None
-  * @retval None
-  */
+
 int main(void) {
     NVIC_SetPriorityGrouping(NVIC_PriorityGroup_4);
     //此处系统时钟已经初始化
@@ -47,8 +45,6 @@ int main(void) {
     SysTick_Config(RCC_Clocks.HCLK_Frequency / 1000);/* SysTick end of count event each 1ms */
     init_cycle_counter(true);
     delay_ms(50);/* Insert 50 ms delay */
-    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE); /* Enable the GPIOA peripheral */
-    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);/* Enable the GPIOACperipheral */
     /**************************************************************************************/
     onboard_uart1_init(); // * 初始化UART1，板载daplink上的cdc串口
     dap_uart_debug_printf("****************************\nSTM32F401RC_FOC_Driver is running! \n");
@@ -61,26 +57,20 @@ int main(void) {
     drv8303_reg_test();
     onboard_adc_init();
     /* Infinite loop */
+    //ad_getValue();
 
     while (1) {
         do {
-            int64_t tStart = get_system_ticks();
-
-            ad_value = ad_getValue(ADC_Channel_10);
-            dap_uart_debug_printf("ad value is %d, ", ad_value);
-            dap_uart_debug_printf("VBus is %.2f V\n", ad_value * 8.675f * 3.3f / 4096);
-
-            ad_value = ad_getValue(ADC_Channel_11);
-            dap_uart_debug_printf("ad value is %d, ", ad_value);
-            uint32_t Rntc = 3.3f * 4700 / (ad_value * 3.3f / 4096) - 4700;
-            dap_uart_debug_printf("Rntc= %d R, temp= %.2f \r\n", Rntc, convert_res_temp_NCP18XH103F03RB(Rntc));
-
-            int32_t tEnd=((int32_t) (get_system_ticks() - tStart)) ;
-            dap_uart_debug_printf("----- cost ticks: %d, time: %d us\n", tEnd,tEnd/120);
+            tStart = get_system_ticks();
+            float vbus_value_v = ad_value[0] * 0.0069911251073576f;
+            float temp_board_c = convert_res_temp_NCP18XH103F03RB(
+                    (3.3f * 4700 / (float) (ad_value[1] * 3.3 / 4095) - 4700));
+            just_float_transmit(vbus_value_v, temp_board_c);
+            tEnd = ((int32_t) (get_system_ticks() - tStart));
+            // dap_uart_debug_printf("总线电压: %.2f V,主板温度: %.2f °C \n ", vbus_value_v, temp_board_c);
+            // dap_uart_debug_printf("------------- cost ticks: %d, time: %d us\n", tEnd, tEnd / 120);
         } while (0);
-
-
-        delay_ms(1000);
+        delay_us(100);
     }
 }
 
