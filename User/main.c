@@ -59,9 +59,14 @@ int main(void) {
     hall_init();
     /* Infinite loop */
     //ad_getValue();
+    Serial_TxPacket[0]=0x01;
+    Serial_TxPacket[1]=0x02;
+    Serial_TxPacket[2]=0x03;
+    Serial_TxPacket[3]=0x04;
     while (1) {
         do {
-            tStart = get_system_ticks();
+          //  tStart = get_system_ticks();
+           // Serial_SendPacket();
 //            float vbus_value_v = ad_value[0] * 0.0069911251073576f;
 //            float temp_board_c = convert_res_temp_NCP18XH103F03RB(
 //                    (3.3f * 4700 / (float) (ad_value[1] * 3.3 / 4095) - 4700));
@@ -70,7 +75,7 @@ int main(void) {
             // dap_uart_debug_printf("总线电压: %.2f V,主板温度: %.2f °C \n ", vbus_value_v, temp_board_c);
             // dap_uart_debug_printf("------------- cost ticks: %d, time: %d us\n", tEnd, tEnd / 120);
         } while (0);
-        delay_us(100);
+        delay_ms(1000);
     }
 }
 

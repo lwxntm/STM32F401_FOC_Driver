@@ -22,6 +22,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 
+#include <string.h>
 #include "stm32f4xx_it.h"
 #include "main.h"
 
@@ -134,14 +135,36 @@ void __ensure_systick_wrapper(void) {
 /*  available peripheral interrupt handler's name please refer to the startup */
 /*  file (startup_stm32f4xx.s).                                               */
 /******************************************************************************/
-uint8_t data1 = 0;
+volatile uint8_t data1 = 0;
 
 void USART1_IRQHandler(void) {
-    if (((USART1->SR) & USART_FLAG_RXNE) != RESET) {
-        data1 = USART1->DR;
-        USART1->DR = data1;
-        // dap_uart_debug_printf("data1:%02X\n", data1);
+    static volatile uint8_t RxState = 0;  //接收状态机
+    static uint8_t pRxPacket = 0;  //指示接收到哪一个了
+
+    volatile uint8_t rc_tmp;
+    uint16_t rc_len;
+    uint16_t i;
+    if (USART_GetITStatus(USART1, USART_IT_IDLE) != RESET) {
+        rc_tmp = USART1->SR;
+        rc_tmp = USART1->DR;//软件序列清除IDLE标志位
+        DMA_Cmd(DMA2_Stream5, DISABLE);//关闭DMA，准备重新配置
+        DMA_ClearITPendingBit(DMA2_Stream5, DMA_IT_TCIF5);    // Clear Transfer Complete flag
+        DMA_ClearITPendingBit(DMA2_Stream5, DMA_IT_TEIF5);    // Clear Transfer error flag
+        rc_len = 128 - DMA_GetCurrDataCounter(DMA2_Stream5);//计算接收数据长度
+
+        Serial_decode_RxPacket(usart1_rx_dma_buffer, rc_len);
     }
+
+    DMA_Cmd(DMA2_Stream5, DISABLE);                      //先关闭DMA,才能设置它
+// 清除DMA中断标志位
+    // DMA_ClearFlag(DMA2_Stream5, DMA_FLAG_TCIF5 | DMA_FLAG_FEIF5 | DMA_FLAG_DMEIF5 | DMA_FLAG_TEIF5 |
+    //                             DMA_FLAG_HTIF5);//清除DMA2_Steam7传输完成标志
+
+    while (DMA_GetCmdStatus(DMA2_Stream5) != DISABLE) ;    //等待传输结束
+
+    DMA_SetCurrDataCounter(DMA2_Stream5, 128);          //设置传输数据长度
+
+    DMA_Cmd(DMA2_Stream5, ENABLE);                      //开启DMA
 }
 
 /**

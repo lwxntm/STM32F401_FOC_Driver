@@ -64,7 +64,7 @@ void hall_init(void) {
 
 void TIM3_IRQHandler(void) {
     if (TIM_GetFlagStatus(TIM3, TIM_FLAG_CC1) != RESET) {
-        TIM_ClearFlag(TIM3, TIM_FLAG_Update | TIM_FLAG_CC1 | TIM_FLAG_CC1OF);
+        CLR_BIT(TIM3->SR, TIM_FLAG_Update | TIM_FLAG_CC1 | TIM_FLAG_CC1OF);
         dap_uart_debug_printf("CCR1 = %lu, HALLA= %d, HALLB= %d, HALLC= %d\n", TIM3->CCR1,
                               ((GPIOC->IDR) & GPIO_Pin_6) != 0, ((GPIOC->IDR) & GPIO_Pin_7) != 0,
                               ((GPIOC->IDR) & GPIO_Pin_8) != 0);
