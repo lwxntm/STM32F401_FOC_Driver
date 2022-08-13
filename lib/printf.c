@@ -39,9 +39,15 @@
 #include "stm32f4xx.h"
 
 void _putchar(char character) {
-    USART1->DR = character;
-    /*当数据从发送数据寄存器转移到发送移位寄存器时，TXE会置高，就可以把下一个数据写入到发送数据寄存器了，虽然此时可能并没有真正发送完成*/
-    while ((USART1->SR & USART_FLAG_TXE) == (uint16_t) RESET);  //对DR寄存器写入后该位会自动清零，不需要手动清零
+    usart1_tx_dma_buffer[usart1_tx_dma_size_counter]=character;
+    usart1_tx_dma_size_counter++;
+    if (usart1_tx_dma_size_counter==128 ||character=='\n' ){
+        uart1_tx_dma(usart1_tx_dma_size_counter);
+        usart1_tx_dma_size_counter=0;
+    }
+//    USART1->DR = character;
+//    /*当数据从发送数据寄存器转移到发送移位寄存器时，TXE会置高，就可以把下一个数据写入到发送数据寄存器了，虽然此时可能并没有真正发送完成*/
+//    while ((USART1->SR & USART_FLAG_TXE) == (uint16_t) RESET);  //对DR寄存器写入后该位会自动清零，不需要手动清零
 }
 
 

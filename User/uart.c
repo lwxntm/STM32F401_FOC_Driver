@@ -7,6 +7,8 @@
 #include "stm32f4xx.h"
 
 uint8_t usart1_rx_dma_buffer[128];
+uint8_t usart1_tx_dma_buffer[128];
+uint8_t usart1_tx_dma_size_counter = 0;
 
 /**
  * 初始化UART1，板载daplink上的cdc串口
@@ -22,6 +24,31 @@ void onboard_uart1_init(void) {
 
     /* Connect PXx to USARTx_Rx*/
     GPIO_PinAFConfig(GPIOB, GPIO_PinSource7, GPIO_AF_USART1);
+
+    /*UART1 TX D<A*/
+    /* DMA2_Stream7 channel4 configuration **************************************/
+    DMA_DeInit(DMA2_Stream7);
+    while (DMA_GetCmdStatus(DMA2_Stream7) != DISABLE);    //等待传输结束
+    DMA_InitTypeDef DMA2_InitStruct_for_uart1_tx = {
+            .DMA_Channel=DMA_Channel_4,
+            .DMA_PeripheralBaseAddr=((uint32_t) &USART1->DR),
+            .DMA_PeripheralDataSize=DMA_PeripheralDataSize_Byte,
+            .DMA_PeripheralInc=DMA_PeripheralInc_Disable,           //外设地址是否自增
+            .DMA_Memory0BaseAddr=(uint32_t) usart1_tx_dma_buffer,
+            .DMA_MemoryDataSize=DMA_MemoryDataSize_Byte,               //每一个内存数据的大小，字节/半字/字
+            .DMA_MemoryInc=DMA_MemoryInc_Enable,   //内存地址是否自增
+            .DMA_DIR=DMA_DIR_MemoryToPeripheral,    //dma方向，内存到外设
+            .DMA_BufferSize=128,     //需要dma搬运的数据数量
+            .DMA_Mode=DMA_Mode_Normal,  //单次还是循环
+            .DMA_Priority=DMA_Priority_Low,
+            .DMA_FIFOMode=DMA_FIFOMode_Disable,           //不使用FIFO
+            .DMA_FIFOThreshold = DMA_FIFOThreshold_Full,
+            .DMA_MemoryBurst = DMA_MemoryBurst_Single,
+            .DMA_PeripheralBurst = DMA_PeripheralBurst_Single
+    };
+    DMA_Init(DMA2_Stream7, &DMA2_InitStruct_for_uart1_tx);
+    DMA_Cmd(DMA2_Stream7, ENABLE);
+
 
     /* UART1_RX DMA  */
     /* DMA2_Stream5 channel4 configuration **************************************/
@@ -83,6 +110,7 @@ void onboard_uart1_init(void) {
 
     USART_ITConfig(USART1, USART_IT_IDLE, ENABLE);
     USART_DMACmd(USART1, USART_DMAReq_Rx, ENABLE);
+    USART_DMACmd(USART1, USART_DMAReq_Tx, ENABLE); //启用发送dma
     NVIC_InitTypeDef NVIC_InitStruct = {
             .NVIC_IRQChannel=USART1_IRQn,
             .NVIC_IRQChannelCmd=ENABLE,
@@ -172,3 +200,33 @@ void Serial_decode_RxPacket(const uint8_t *pRxPacket, uint8_t len) {
     }
 }
 
+/**
+ * 启动一次uart1dma发送
+ */
+void uart1_tx_dma(uint8_t cnt) {
+
+    DMA_SetCurrDataCounter(DMA2_Stream7, cnt);
+    DMA_Cmd(DMA2_Stream7, ENABLE);
+
+    /**
+     * 此处代码检测DMA是否成功使能，配置失败可能会导致使能失败
+     */
+    __IO uint32_t Timeout = 10000;
+    while ((DMA_GetCmdStatus(DMA2_Stream7) != ENABLE) && (Timeout-- > 0)) {
+    }
+    /* Check if a timeout condition occurred */
+    if (Timeout == 0) {
+        /* Manage the error: to simplify the code enter an infinite loop */
+        while (1) {
+            dap_uart_debug_printf("dma_start error\n");
+        }
+    }
+
+    while (DMA_GetFlagStatus(DMA2_Stream7, DMA_FLAG_TCIF7) == RESET); //等待转运完成
+    /**
+     * 此处非常重要！如果要软件触发dma转换，转换完成后必须手动清除TCIFx，否则系统不会进行下一次转换
+     */
+    DMA_ClearFlag(DMA2_Stream7, DMA_FLAG_TCIF7);
+
+    DMA_Cmd(DMA2_Stream7, DISABLE);
+}
